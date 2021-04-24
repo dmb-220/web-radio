@@ -1,5 +1,5 @@
-const char* WeatherURL="http://api.openweathermap.org/data/2.5/weather?q=TELŠIAI,LT&lang=lt&units=metric&APPID=2a0fdc441e007171bf18be3f9db4d7fd";
-const char* DayForcastURL="http://api.openweathermap.org/data/2.5/forecast?q=BUOŽĖNAI,lt&APPID=2a0fdc441e007171bf18be3f9db4d7fd";
+const char* WeatherURL="http://api.openweathermap.org/data/2.5/weather?q=TELŠIAI,LT&lang=lt&units=metric&APPID=xxx";
+const char* DayForcastURL="http://api.openweathermap.org/data/2.5/forecast?q=BUOŽĖNAI,lt&APPID=xxx";
 
 //Connections to board LED matrix
 #define latch_pin 4//26
