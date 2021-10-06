@@ -1,5 +1,5 @@
-const char* WeatherURL="http://api.openweathermap.org/data/2.5/weather?q=TELŠIAI,LT&lang=lt&units=metric&APPID=xxx";
-const char* DayForcastURL="http://api.openweathermap.org/data/2.5/forecast?q=BUOŽĖNAI,lt&APPID=xxx";
+const char* WeatherURL="http://api.openweathermap.org/data/2.5/weather?q=TELŠIAI,LT&lang=lt&units=metric&APPID=2a0fdc441e007171bf18be3f9db4d7fd";
+const char* DayForcastURL="http://api.openweathermap.org/data/2.5/forecast?q=BUOŽĖNAI,lt&APPID=2a0fdc441e007171bf18be3f9db4d7fd";
 
 //Connections to board LED matrix
 #define latch_pin 4//26
@@ -67,40 +67,84 @@ void clear_buffer(){
     }
 }
 
-//set line for matrix
-void set_line(unsigned char row){
-  if(row == 0){REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT13 + BIT14 + BIT15);}
-  if(row == 1){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12);
+//Timer
+volatile int interruptCounter;
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+ 
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  interruptCounter++;
+  
+  unsigned int pos = ((unsigned int)row<<3), pos0;
+  unsigned char mask;
+  // disable screens
+  REG_WRITE(GPIO_OUT_W1TS_REG, BIT16);
+  // set row
+  if(row == 0){REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT13 + BIT14 + BIT15);}
+  if(row == 1){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT13 + BIT14 + BIT15);}
   if(row == 2){REG_WRITE(GPIO_OUT_W1TS_REG, BIT13);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT14 + BIT15);}
-  if(row == 3){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT13);
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT14 + BIT15);}
+  if(row == 3){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT13);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT14 + BIT15);}
   if(row == 4){REG_WRITE(GPIO_OUT_W1TS_REG, BIT14);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT13 + BIT15);}
-  if(row == 5){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT14);
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT13 + BIT15);}
+  if(row == 5){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT14);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT13 + BIT15);}
+
   if(row == 6){REG_WRITE(GPIO_OUT_W1TS_REG, BIT13 + BIT14);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT15);}
-  if(row == 7){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT13 + BIT14);
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT15);}
+  if(row == 7){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT13 + BIT14);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT15);}
   if(row == 8){REG_WRITE(GPIO_OUT_W1TS_REG, BIT15);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT13 + BIT14);}
-  if(row == 9){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT15);
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT13 + BIT14);}
+  if(row == 9){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT15);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT13 + BIT14);}
   if(row == 10){REG_WRITE(GPIO_OUT_W1TS_REG, BIT13 + BIT15);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT14);}
-  if(row == 11){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT13 + BIT15);
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT14);}
+  if(row == 11){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT13 + BIT15);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT14);}
+
   if(row == 12){REG_WRITE(GPIO_OUT_W1TS_REG, BIT14 + BIT15);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12 + BIT13);}
-  if(row == 13){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT14 + BIT15);
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2 + BIT13);}
+  if(row == 13){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT14 + BIT15);
     REG_WRITE(GPIO_OUT_W1TC_REG, BIT13);}
   if(row == 14){REG_WRITE(GPIO_OUT_W1TS_REG, BIT13 + BIT14 + BIT15);
-    REG_WRITE(GPIO_OUT_W1TC_REG, BIT12);}
-  if(row == 15){REG_WRITE(GPIO_OUT_W1TS_REG, BIT12 + BIT13 + BIT14 + BIT15);}
-}
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT2);}
+  if(row == 15){REG_WRITE(GPIO_OUT_W1TS_REG, BIT2 + BIT13 + BIT14 + BIT15);}
 
+  for (unsigned char i=0; i<64; i++) {
+    //get current mask
+    mask = bitmask[i&0x07];
+    // Clock = low
+    REG_WRITE(GPIO_OUT_W1TC_REG, BIT17);
+    // reset data lines to high
+    digitalWrite(data_R1, LOW);
+    digitalWrite(data_R2, LOW);
+    pos0 = pos + (i>>3);
+    
+    // set data lines
+    if (Buffer_rodyti[pos0]&mask)
+      digitalWrite(data_R1, HIGH);
+      pos0+=128;
+    if (Buffer_rodyti[pos0]&mask)
+      digitalWrite(data_R2, HIGH);
+      
+    // Clock = high
+    REG_WRITE(GPIO_OUT_W1TS_REG, BIT17);
+  }
+  // strobe latch pin
+  REG_WRITE(GPIO_OUT_W1TS_REG, BIT4);
+  REG_WRITE(GPIO_OUT_W1TC_REG, BIT4);
+  // enable again
+  REG_WRITE(GPIO_OUT_W1TC_REG, BIT16);
+  
+  row++;
+  if(row == 16){row = 0;}
+  
+  portEXIT_CRITICAL_ISR(&timerMux);
+}
 
 void printLocalTime(){
   struct tm timeinfo;

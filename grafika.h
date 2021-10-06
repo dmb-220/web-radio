@@ -1,5 +1,11 @@
 #include "sriftas.h"
 
+//update
+void update(){
+  for(int i=0; i<256; i++){
+      Buffer_rodyti[i] = Buffer[i];
+    }
+}
 //Nupiesiamas taskas
 void drawPoint(uint16_t x, uint16_t y, uint8_t pixel){
   //if((x < 0) || (y < 0) || (x >= PLOTIS) || (y >= AUKSTIS)){
